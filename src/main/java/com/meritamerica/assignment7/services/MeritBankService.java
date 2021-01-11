@@ -1,19 +1,19 @@
-package com.meritamerica.assignment5.services;
+package com.meritamerica.assignment7.services;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.meritamerica.assignment5.models.AccountHolder;
-import com.meritamerica.assignment5.models.CDAccount;
-import com.meritamerica.assignment5.models.CDOffering;
-import com.meritamerica.assignment5.models.CheckingAccount;
-import com.meritamerica.assignment5.models.SavingsAccount;
-import com.meritamerica.assignment5.repositories.AccountHolderRepo;
-import com.meritamerica.assignment5.repositories.CDAccountRepo;
-import com.meritamerica.assignment5.repositories.CDOfferingRepo;
-import com.meritamerica.assignment5.repositories.CheckingAccountRepo;
-import com.meritamerica.assignment5.repositories.SavingsAccountRepo;
+import com.meritamerica.assignment7.models.AccountHolder;
+import com.meritamerica.assignment7.models.CDAccount;
+import com.meritamerica.assignment7.models.CDOffering;
+import com.meritamerica.assignment7.models.CheckingAccount;
+import com.meritamerica.assignment7.models.SavingsAccount;
+import com.meritamerica.assignment7.repositories.AccountHolderRepo;
+import com.meritamerica.assignment7.repositories.CDAccountRepo;
+import com.meritamerica.assignment7.repositories.CDOfferingRepo;
+import com.meritamerica.assignment7.repositories.CheckingAccountRepo;
+import com.meritamerica.assignment7.repositories.SavingsAccountRepo;
 
 
 @Service

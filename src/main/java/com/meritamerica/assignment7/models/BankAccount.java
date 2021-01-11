@@ -1,4 +1,4 @@
-package com.meritamerica.assignment5.models;
+package com.meritamerica.assignment7.models;
 
 import java.text.NumberFormat;
 import java.text.ParseException;

@@ -1,4 +1,4 @@
-package com.meritamerica.assignment5.exceptions;
+package com.meritamerica.assignment7.exceptions;
 
 public class NegativeAmountException extends Exception{
 

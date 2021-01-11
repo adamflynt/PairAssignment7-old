@@ -1,9 +1,11 @@
-package com.meritamerica.assignment5.controllers;
+package com.meritamerica.assignment7.controllers;
 
-import com.meritamerica.assignment5.exceptions.ExceedsCombinedBalanceLimitException;
-import com.meritamerica.assignment5.exceptions.NegativeAmountException;
-import com.meritamerica.assignment5.models.*;
-import com.meritamerica.assignment5.services.MeritBankService;
+import com.meritamerica.assignment7.exceptions.ExceedsCombinedBalanceLimitException;
+import com.meritamerica.assignment7.exceptions.NegativeAmountException;
+import com.meritamerica.assignment7.models.*;
+import com.meritamerica.assignment7.security.JwtUtil;
+import com.meritamerica.assignment7.security.MyUserDetailsService;
+import com.meritamerica.assignment7.services.MeritBankService;
 
 import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
@@ -12,10 +14,24 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @RestController
 public class MeritBankController {
+
+	@Autowired
+	private AuthenticationManager authenticationManager;
 	
+	@Autowired
+	private MyUserDetailsService userDetailsService;
+	
+	@Autowired
+	private JwtUtil jwtTokenUtil;
+
 	@Autowired
 	MeritBankService service;
 
@@ -38,17 +54,17 @@ public class MeritBankController {
 
 	@GetMapping(value = "/AccountHolders/{id}")
 	public AccountHolder getAccountHolderById(@PathVariable(name = "id") long id) throws Exception {
-		
+
 		if (id > accountHolders.size()) {
 			throw new Exception("No such id found.");
 		}
-		
+
 		for (AccountHolder acct : accountHolders) {
 			if (acct.getId() == id) {
 				return acct;
 			}
 		}
-		
+
 		return service.getAccountHolderById(id);
 	}
 
@@ -58,13 +74,14 @@ public class MeritBankController {
 
 	@PostMapping("/AccountHolders/{id}/CheckingAccounts")
 	@ResponseStatus(HttpStatus.CREATED)
-	public CheckingAccount addCheckingAccount(@Valid @PathVariable(name = "id") long id, @RequestBody CheckingAccount checkingAccount)
+	public CheckingAccount addCheckingAccount(@Valid @PathVariable(name = "id") long id,
+			@RequestBody CheckingAccount checkingAccount)
 			throws Exception, ExceedsCombinedBalanceLimitException, NegativeAmountException {
-		
+
 		if (id > accountHolders.size()) {
 			throw new Exception("No such id found!");
 		}
-		
+
 		for (AccountHolder acct : accountHolders) {
 			if (acct.getId() == id) {
 				if (checkingAccount.getBalance() < 0) {
@@ -72,12 +89,12 @@ public class MeritBankController {
 				} else if (acct.getCombinedBalance() > 250000) {
 					throw new Exception("Cannot exceed $250000 across all accounts.");
 				}
-				
+
 				checkingAccount.setAccountHolder(acct);
 				acct.checkingAccounts.add(checkingAccount);
 			}
 		}
-		
+
 		service.postCheckingAccount(checkingAccount, id);
 		return checkingAccount;
 	}
@@ -85,11 +102,11 @@ public class MeritBankController {
 	@GetMapping("/AccountHolders/{id}/CheckingAccounts")
 	@ResponseStatus(HttpStatus.OK)
 	public List<CheckingAccount> getCheckingAccounts(@PathVariable(name = "id") long id) throws Exception {
-		
+
 		if (id > accountHolders.size()) {
 			throw new Exception("No such id found!");
 		}
-		
+
 		for (AccountHolder acct : accountHolders) {
 			if (acct.getId() == id) {
 				return acct.checkingAccounts;
@@ -104,13 +121,14 @@ public class MeritBankController {
 
 	@PostMapping("/AccountHolders/{id}/SavingsAccounts")
 	@ResponseStatus(HttpStatus.CREATED)
-	public SavingsAccount addSavingsAccount(@Valid @PathVariable(name = "id") long id, @RequestBody SavingsAccount savingsAccount)
+	public SavingsAccount addSavingsAccount(@Valid @PathVariable(name = "id") long id,
+			@RequestBody SavingsAccount savingsAccount)
 			throws Exception, ExceedsCombinedBalanceLimitException, NegativeAmountException {
-		
+
 		if (id > accountHolders.size()) {
 			throw new Exception("No such id found!");
 		}
-		
+
 		for (AccountHolder acct : accountHolders) {
 			if (acct.getId() == id) {
 				if (savingsAccount.getBalance() < 0) {
@@ -118,12 +136,12 @@ public class MeritBankController {
 				} else if (acct.getCombinedBalance() > 250000) {
 					throw new Exception("Cannot exceed $250000 across all accounts.");
 				}
-				
+
 				savingsAccount.setAccountHolder(acct);
 				acct.savingsAccounts.add(savingsAccount);
 			}
 		}
-		
+
 		service.postSavingsAccount(savingsAccount, id);
 		return savingsAccount;
 	}
@@ -131,11 +149,11 @@ public class MeritBankController {
 	@GetMapping("/AccountHolders/{id}/SavingsAccounts")
 	@ResponseStatus(HttpStatus.OK)
 	public List<SavingsAccount> getSavingsAccounts(@PathVariable(name = "id") long id) throws Exception {
-		
+
 		if (id > accountHolders.size()) {
 			throw new Exception("No such id found!");
 		}
-		
+
 		for (AccountHolder acct : accountHolders) {
 			if (acct.getId() == id) {
 				return acct.savingsAccounts;
@@ -152,11 +170,11 @@ public class MeritBankController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public CDAccount addCDAccount(@Valid @PathVariable(name = "id") long id, @RequestBody CDAccount cdAccount)
 			throws Exception, ExceedsCombinedBalanceLimitException, NegativeAmountException {
-		
+
 		if (id > accountHolders.size()) {
 			throw new Exception("No such id found!");
 		}
-		
+
 		for (AccountHolder acct : accountHolders) {
 			if (acct.getId() == id) {
 				if (cdAccount.getBalance() < 0) {
@@ -164,12 +182,12 @@ public class MeritBankController {
 				} else if (acct.getCombinedBalance() > 250000) {
 					throw new Exception("Cannot exceed $250000 across all accounts.");
 				}
-				
+
 				cdAccount.setAccountHolder(acct);
 				acct.cdAccounts.add(cdAccount);
 			}
 		}
-		
+
 		service.postCDAccount(cdAccount, id);
 		return cdAccount;
 	}
@@ -177,11 +195,11 @@ public class MeritBankController {
 	@GetMapping("/AccountHolders/{id}/CDAccounts")
 	@ResponseStatus(HttpStatus.OK)
 	public List<CDAccount> getCDAccounts(@PathVariable(name = "id") long id) throws Exception {
-		
+
 		if (id > accountHolders.size()) {
 			throw new Exception("No such id found!");
 		}
-		
+
 		for (AccountHolder acct : accountHolders) {
 			if (acct.getId() == id) {
 				return acct.cdAccounts;
@@ -206,6 +224,26 @@ public class MeritBankController {
 	public List<CDOffering> getCDOfferings() throws Exception {
 
 		return service.getCDOfferings();
+	}
+	
+	// ========================
+	// **** Authentication ****
+	// ========================
+
+	@RequestMapping(value = "/authenticate", method = RequestMethod.POST)
+	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+		try {
+			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+					authenticationRequest.getUsername(), authenticationRequest.getPassword()));
+		} catch (BadCredentialsException e) {
+			throw new Exception("Incorrect username or password", e);
+		}
+		final UserDetails userDetails = userDetailsService
+				.loadUserByUsername(authenticationRequest.getUsername());
+		
+		final String jwt = jwtTokenUtil.generateToken(userDetails);
+		
+		return ResponseEntity.ok(new AuthenticationResponse(jwt));
 	}
 
 }
