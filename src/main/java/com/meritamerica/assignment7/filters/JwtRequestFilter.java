@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.meritamerica.assignment7.security.JwtUtil;
-import com.meritamerica.assignment7.security.MyUserDetailsService;
+import com.meritamerica.assignment7.services.MyUserDetailsService;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {

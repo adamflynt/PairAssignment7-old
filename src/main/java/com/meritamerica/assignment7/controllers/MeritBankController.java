@@ -3,9 +3,12 @@ package com.meritamerica.assignment7.controllers;
 import com.meritamerica.assignment7.exceptions.ExceedsCombinedBalanceLimitException;
 import com.meritamerica.assignment7.exceptions.NegativeAmountException;
 import com.meritamerica.assignment7.models.*;
+import com.meritamerica.assignment7.repositories.UserRepository;
 import com.meritamerica.assignment7.security.JwtUtil;
-import com.meritamerica.assignment7.security.MyUserDetailsService;
 import com.meritamerica.assignment7.services.MeritBankService;
+import com.meritamerica.assignment7.services.MyUserDetailsService;
+
+import javassist.NotFoundException;
 
 import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
@@ -25,15 +28,18 @@ public class MeritBankController {
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
-	
+
 	@Autowired
 	private MyUserDetailsService userDetailsService;
-	
+
 	@Autowired
 	private JwtUtil jwtTokenUtil;
 
 	@Autowired
 	MeritBankService service;
+
+	@Autowired
+	private UserRepository userRepository;
 
 	public List<AccountHolder> accountHolders = new ArrayList<AccountHolder>();
 	public List<CDOffering> cdOfferings = new ArrayList<CDOffering>();
@@ -222,28 +228,94 @@ public class MeritBankController {
 	@GetMapping("/CDOfferings")
 	@ResponseStatus(HttpStatus.OK)
 	public List<CDOffering> getCDOfferings() throws Exception {
-
 		return service.getCDOfferings();
 	}
-	
+
 	// ========================
 	// **** Authentication ****
 	// ========================
 
-	@RequestMapping(value = "/authenticate", method = RequestMethod.POST)
-	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+	@PostMapping(value = "/authenticate")
+	@ResponseStatus(HttpStatus.ACCEPTED)
+//	@RequestMapping(value = "/authenticate", method = RequestMethod.POST)
+	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest)
+			throws Exception {
 		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
 					authenticationRequest.getUsername(), authenticationRequest.getPassword()));
 		} catch (BadCredentialsException e) {
 			throw new Exception("Incorrect username or password", e);
 		}
-		final UserDetails userDetails = userDetailsService
-				.loadUserByUsername(authenticationRequest.getUsername());
-		
+		final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+
 		final String jwt = jwtTokenUtil.generateToken(userDetails);
-		
+
 		return ResponseEntity.ok(new AuthenticationResponse(jwt));
 	}
 
+	@PostMapping(value = "/authenticate/CreateUser")
+	public ResponseEntity<?> createUser(@RequestBody Users users) {
+		userRepository.save(users);
+		return ResponseEntity.ok(users);
+	}
+	
+	// ============
+	// **** Me ****
+	// ============
+	
+	@GetMapping(value = "/Me")
+	@ResponseStatus(HttpStatus.OK)
+	public AccountHolder getAccount(@RequestHeader("Authorization") String jwt) {
+		String username = jwtTokenUtil.extractUsername(jwt.substring(7));
+		MyUserDetails userDetails = (MyUserDetails) userDetailsService.loadUserByUsername(username);
+		
+		return userDetails.getAccountHolder();
+	}
+	
+	@PostMapping(value = "/Me/CheckingAccounts")
+	@ResponseStatus(HttpStatus.CREATED)
+	public CheckingAccount postCheckingAccount(@RequestHeader("Authorization") String jwt, @RequestBody CheckingAccount checkingAccount)
+												throws NegativeAmountException, ExceedsCombinedBalanceLimitException {
+		AccountHolder accountHolder = getAccount(jwt);
+		return service.postCheckingAccount(checkingAccount, accountHolder.getId());
+	}
+	
+	@GetMapping(value = "/Me/CheckingAccounts")
+	@ResponseStatus(HttpStatus.OK)
+	public List<CheckingAccount> getCheckingAccounts(@RequestHeader("Authorization") String jwt) throws NotFoundException {
+		AccountHolder accountHolder = getAccount(jwt);
+		return service.getCheckingAccounts(accountHolder.getId());
+	}
+	
+	@PostMapping(value = "/Me/SavingsAccounts")
+	@ResponseStatus(HttpStatus.CREATED)
+	public SavingsAccount postSavingsAccount(@RequestHeader("Authorization") String jwt, @RequestBody SavingsAccount savingsAccount)
+												throws NegativeAmountException, ExceedsCombinedBalanceLimitException {
+		AccountHolder accountHolder = getAccount(jwt);
+		return service.postSavingsAccount(savingsAccount, accountHolder.getId());
+	}
+	
+	@GetMapping(value = "/Me/SavingsAccounts")
+	@ResponseStatus(HttpStatus.OK)
+	public List<SavingsAccount> getSavingsAccounts(@RequestHeader("Authorization") String jwt) throws NotFoundException {
+		AccountHolder accountHolder = getAccount(jwt);
+		return service.getSavingsAccounts(accountHolder.getId());
+	}
+	
+	@PostMapping(value = "/Me/CDAccounts")
+	@ResponseStatus(HttpStatus.CREATED)
+	public CDAccount postCDAccount(@RequestHeader("Authorization") String jwt, @RequestBody CDAccount cdAccount)
+												throws NegativeAmountException, ExceedsCombinedBalanceLimitException {
+		AccountHolder accountHolder = getAccount(jwt);
+		return service.postCDAccount(cdAccount, accountHolder.getId());
+	}
+	
+	@GetMapping(value = "/Me/CDAccounts")
+	@ResponseStatus(HttpStatus.OK)
+	public List<CDAccount> getCDAccounts(@RequestHeader("Authorization") String jwt) throws NotFoundException {
+		AccountHolder accountHolder = getAccount(jwt);
+		return service.getCDAccounts(accountHolder.getId());
+	}
+	
+	
 }

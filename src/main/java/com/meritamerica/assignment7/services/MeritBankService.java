@@ -1,6 +1,8 @@
 package com.meritamerica.assignment7.services;
 
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,24 +52,27 @@ public class MeritBankService {
 		return savingsAccountRepository.save(savingsAccount);
 	}
 	
-	public List<SavingsAccount> getSavingsAccounts(){
-		return savingsAccountRepository.findAll();
+	public List<SavingsAccount> getSavingsAccounts(long id) {
+		Optional<AccountHolder> account = accountHolderRepository.findById(id);
+		return account.get().getSavingsAccounts();
 	}
 	
 	public CDAccount postCDAccount(CDAccount cdAccount, long id) {
 		return cdAccountRepository.save(cdAccount);
 	}
 	
-	public List<CDAccount> getCDAccounts(){
-		return cdAccountRepository.findAll();
+	public List<CDAccount> getCDAccounts(long id){
+		Optional<AccountHolder> account = accountHolderRepository.findById(id);
+		return account.get().getCDAccounts();
 	}
 	
 	public CheckingAccount postCheckingAccount(CheckingAccount checkingAccount, long id) {
 		return checkingAccountRepository.save(checkingAccount);
 	}
 	
-	public List<CheckingAccount> getCheckingAccounts(){
-		return checkingAccountRepository.findAll();
+	public List<CheckingAccount> getCheckingAccounts(long id){
+		Optional<AccountHolder> account = accountHolderRepository.findById(id);
+		return account.get().getCheckingAccounts();
 	}
 	
 	public CDOffering postCDOffering(CDOffering cdOffering) {

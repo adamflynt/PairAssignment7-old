@@ -32,7 +32,7 @@ public class AccountHolder implements Comparable<AccountHolder> {
 	// Mark as primary key:
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column
+	@Column(name = "accountId")
 	long id;
 	static int newId = 1;
 
@@ -71,6 +71,7 @@ public class AccountHolder implements Comparable<AccountHolder> {
 	 */
 
 	public AccountHolder() {
+		
 	}
 
 	/*
